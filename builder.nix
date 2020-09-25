@@ -53,8 +53,7 @@
   boot.initrd.kernelModules = [ "loop" "overlay" ];
 
   hardware.enableRedistributableFirmware = true;
-  networking.wireless.enable = true;
-  hardware.firmware = [ pkgs.wireless-regdb ];
+  networking.wireless.enable = false;
 
   services.openssh.enable = true;
   users.users.builder = {
@@ -100,11 +99,6 @@
       </service-group>
     '';
   };
-
-  networking.dhcpcd.extraConfig = ''
-    timeout 0
-    noarp
-  '';
 
   services.logind.extraConfig = ''
     HandleLidSwitch = ignore
