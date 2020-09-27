@@ -2,7 +2,7 @@
 #!nix-shell -i python3 -p nix pixiecore python3
 
 import subprocess
-import http.server.BaseHTTPServer
+import http.server
 
 port = 4242
 authorizedKey = ''
@@ -12,9 +12,9 @@ def build_system(attr, mac_address):
     return subprocess.Popen(['nix-build', '--no-gc-warning', '--no-out-link', 'system.nix',
                              '-A', attr,
                              "--arg", "config", ("builtins.fromJSON (builtins.readFile %s)" % configFile)]
-                            , stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                            , stdout=subprocess.PIPE)
 
-class PixieListener(http.server.BaseHTTPServer.BaseHTTPRequestHandler):
+class PixieListener(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         parts = self.path.split('/')
         if parts[1] == 'v1' and parts[2] == 'boot':
@@ -109,9 +109,8 @@ class PixieListener(http.server.BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
 
-process = subprocess.Popen(["pixiecore", "api", "server", "localhost:4242"]
-                           , stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+process = subprocess.Popen(["pixiecore", "api", "http://localhost:4242"])
 
-httpd = http.server.BaseHTTPServer.HTTPServer(('', port), PixieListener)
+httpd = http.server.HTTPServer(('', port), PixieListener)
 while not process.poll():
     httpd.handle_request()
