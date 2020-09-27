@@ -70,8 +70,10 @@ class PixieListener(http.server.BaseHTTPRequestHandler):
                 timeout += 1
                 time.sleep(1)
             self.send_response(200)
+            filename = '%s/bzImage' % pxe_kernel
+            self.send_header('Content-Length', "%s" % os.path.getsize(filename))
             self.end_headers()
-            with open('%s/bzImage' % pxe_kernel, 'rb') as f:
+            with open(filename, 'rb') as f:
                 self.wfile.write(f.read())
         elif parts[1] == 'initrd':
             mac_address = parts[2]
@@ -93,8 +95,10 @@ class PixieListener(http.server.BaseHTTPRequestHandler):
                 timeout += 1
                 time.sleep(1)
             self.send_response(200)
+            filename = '%s/initrd' % pxe_ramdisk
+            self.send_header('Content-Length', "%s" % os.path.getsize(filename))
             self.end_headers()
-            with open('%s/initrd' % pxe_ramdisk, 'rb') as f:
+            with open(filename, 'rb') as f:
                 self.wfile.write(f.read())
         else:
             self.send_response(404)
