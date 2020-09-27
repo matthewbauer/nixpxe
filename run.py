@@ -1,6 +1,7 @@
 #!/usr/bin/env nix-shell
 #!nix-shell -i python3 -p nix pixiecore python3
 
+import os
 import time
 import subprocess
 import http.server
