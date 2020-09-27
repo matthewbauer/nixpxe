@@ -1,4 +1,4 @@
-{ pkgs ? import <nixpkgs> { }, config ? {}, macAddress ? null }: let
+{ pkgs ? import <nixpkgs> { }, config ? {}, macAddress ? "*" }: let
   config' = config.${macAddress} or config."*";
 in import (pkgs.path + /nixos/lib/eval-config.nix) {
   modules = [

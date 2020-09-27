@@ -1,6 +1,7 @@
 #!/usr/bin/env nix-shell
 #!nix-shell -i python3 -p nix pixiecore python3
 
+import time
 import subprocess
 import http.server
 
@@ -11,6 +12,7 @@ configFile = "./config.json"
 def build_system(attr, mac_address):
     return subprocess.Popen(['nix-build', '--no-gc-warning', '--no-out-link', 'system.nix',
                              '-A', attr,
+                             "--argstr", "macAddress", mac_address,
                              "--arg", "config", ("builtins.fromJSON (builtins.readFile %s)" % configFile)]
                             , stdout=subprocess.PIPE)
 
