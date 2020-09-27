@@ -4,6 +4,7 @@
 import time
 import subprocess
 import http.server
+import json
 
 port = 4242
 authorizedKey = ''
@@ -25,14 +26,10 @@ class PixieListener(http.server.BaseHTTPRequestHandler):
             system = None
             timeout = 0
             while True:
-                system = process.stdout.readline()
-                if system != '' and process.poll():
-                    if process.returncode != 0:
-                        self.send_response(500)
-                        self.end_headers()
-                        return
+                system = process.stdout.readline().decode("utf-8").rstrip()
+                if system != '':
                     break
-                elif process.poll():
+                elif process.returncode > 0:
                     self.send_response(500)
                     self.end_headers()
                     return
@@ -43,7 +40,7 @@ class PixieListener(http.server.BaseHTTPRequestHandler):
                 timeout += 1
                 time.sleep(1)
             kernel_params = ''
-            with open('%s/kernel-params', 'r') as f:
+            with open('%s/kernel-params' % system, 'r') as f:
                 kernel_params = f.read()
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
@@ -59,14 +56,10 @@ class PixieListener(http.server.BaseHTTPRequestHandler):
             pxe_kernel = None
             timeout = 0
             while True:
-                pxe_kernel = process.stdout.readline()
-                if pxe_kernel != '' and process.poll():
-                    if process.returncode != 0:
-                        self.send_response(500)
-                        self.end_headers()
-                        return
+                pxe_kernel = process.stdout.readline().decode("utf-8").rstrip()
+                if pxe_kernel != '':
                     break
-                elif process.poll():
+                elif process.returncode > 0:
                     self.send_response(500)
                     self.end_headers()
                     return
@@ -86,14 +79,10 @@ class PixieListener(http.server.BaseHTTPRequestHandler):
             pxe_ramdisk = None
             timeout = 0
             while True:
-                pxe_ramdisk = process.stdout.readline()
-                if pxe_ramdisk != '' and process.poll():
-                    if process.returncode != 0:
-                        self.send_response(500)
-                        self.end_headers()
-                        return
+                pxe_ramdisk = process.stdout.readline().decode("utf-8").rstrip()
+                if pxe_ramdisk != '':
                     break
-                elif process.poll():
+                elif process.returncode > 0:
                     self.send_response(500)
                     self.end_headers()
                     return
