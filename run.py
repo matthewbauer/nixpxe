@@ -1,6 +1,7 @@
 #!/usr/bin/env nix-shell
 #!nix-shell -i python3 -p nix pixiecore python3
 
+import argparse
 import os
 import time
 import subprocess
@@ -8,14 +9,23 @@ import http.server
 import json
 
 port = 4242
-authorizedKey = ''
 configFile = "./config.json"
+
+parser = argparse.ArgumentParser(description='Run NixOS PXE Daemon')
+parser.add_argument('config', type=str, help='config file',
+                    default='./config.json', nargs='?')
+
+args = parser.parse_args()
+
+if not os.path.exists(args.config):
+    print("Config %s does not exist" % args.config)
+    sys.exit(1)
 
 def build_system(attr, mac_address):
     return subprocess.Popen(['nix-build', '--no-gc-warning', '--no-out-link', 'system.nix',
                              '-A', attr,
                              "--argstr", "macAddress", mac_address,
-                             "--arg", "config", ("builtins.fromJSON (builtins.readFile %s)" % configFile)]
+                             "--arg", "config", ("builtins.fromJSON (builtins.readFile %s)" % args.config)]
                             , stdout=subprocess.PIPE)
 
 class PixieListener(http.server.BaseHTTPRequestHandler):
