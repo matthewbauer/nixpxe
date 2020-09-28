@@ -1,4 +1,5 @@
-{ pkgs ? import <nixpkgs> { }, config ? {}, macAddress ? "*" }: let
+{ pkgs ? import <nixpkgs> { }, config ? {}, macAddress ? "*"
+, hostName ? "unknown" }: let
   config' = config.${macAddress} or config."*";
 in import (pkgs.path + /nixos/lib/eval-config.nix) {
   modules = [
@@ -9,7 +10,9 @@ in import (pkgs.path + /nixos/lib/eval-config.nix) {
                  then "x86_64-linux"
                  else builtins.currentSystem;
       };
-      networking.hostName = config'.hostName;
+      networking.hostName =
+        if macAddress == "*" then hostName
+        else config'.hostName;
       i18n.defaultLocale = config'.lang;
       i18n.supportedLocales = [ "${config'.lang}.UTF-8/UTF-8" ];
       users.users.builder.openssh.authorizedKeys.keys = config'.authorizedKeys;

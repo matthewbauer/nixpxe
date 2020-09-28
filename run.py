@@ -21,12 +21,20 @@ if not os.path.exists(args.config):
     print("Config %s does not exist" % args.config)
     sys.exit(1)
 
+knownAddresses = {}
+numHosts = 1
+
 def build_system(attr, mac_address):
-    return subprocess.Popen(['nix-build', '--no-gc-warning', '--no-out-link', 'system.nix',
-                             '-A', attr,
-                             "--argstr", "macAddress", mac_address,
-                             "--arg", "config", ("builtins.fromJSON (builtins.readFile %s)" % args.config)]
-                            , stdout=subprocess.PIPE)
+    process = subprocess.Popen(['nix-build', '--no-gc-warning', '--no-out-link', 'system.nix',
+                                '-A', attr,
+                                "--argstr", "macAddress", mac_address,
+                                "--argstr", "hostName", "nixos%s" % numHosts,
+                                "--arg", "config", ("builtins.fromJSON (builtins.readFile %s)" % args.config)]
+                                , stdout=subprocess.PIPE)
+    if mac_address not in knownAddresses:
+        knownAddresses[mac_address] = True
+        numHosts += 1
+    return process
 
 class PixieListener(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
