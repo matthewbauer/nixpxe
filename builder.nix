@@ -56,10 +56,7 @@
   networking.wireless.enable = false;
 
   services.openssh.enable = true;
-  users.users.builder = {
-    isNormalUser = true;
-    useDefaultShell = true;
-  };
+  users.users.builder = {};
 
   services.localtime.enable = true;
 
