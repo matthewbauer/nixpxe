@@ -56,7 +56,10 @@
   networking.wireless.enable = false;
 
   services.openssh.enable = true;
-  users.users.builder = {};
+  users.users.builder = {
+    useDefaultShell = true;
+  };
+  nix.trustedUsers = [ "root" "builder" ];
 
   services.localtime.enable = true;
 
