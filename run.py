@@ -25,6 +25,7 @@ knownAddresses = {}
 numHosts = 1
 
 def build_system(attr, mac_address):
+    global numHosts
     process = subprocess.Popen(['nix-build', '--no-gc-warning', '--no-out-link', 'system.nix',
                                 '-A', attr,
                                 "--argstr", "macAddress", mac_address,
