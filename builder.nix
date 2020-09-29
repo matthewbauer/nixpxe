@@ -105,4 +105,9 @@
     HandleLidSwitchExternalPower = ignore
   '';
 
+  nix.extraOptions = ''
+    min-free = 1073741824 # 2^30
+    max-free = 4294967296 # 2^32
+  '';
+
 }
