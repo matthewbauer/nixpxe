@@ -59,7 +59,8 @@
   users.users.builder = {
     useDefaultShell = true;
   };
-  nix.trustedUsers = [ "root" "builder" ];
+  users.groups.nix-trusted-user = {};
+  nix.trustedUsers = [ "root" "builder" "@nix-trusted-user" ];
 
   services.localtime.enable = true;
 
