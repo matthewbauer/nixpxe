@@ -4,12 +4,12 @@
 in import (pkgs.path + /nixos/lib/eval-config.nix) {
   modules = [
     ./builder.nix
-    ({ lib, ... }: {
-      nixpkgs.localSystem = lib.mkForce {
+    ({ lib, ... }: let
         system = if builtins.currentSystem == "x86_64-darwin"
                  then "x86_64-linux"
                  else builtins.currentSystem;
-      };
+    in {
+      nixpkgs.localSystem = lib.mkForce { inherit system; };
       networking.hostName =
         if macAddress == "*" then hostName
         else config'.hostName;
@@ -18,7 +18,7 @@ in import (pkgs.path + /nixos/lib/eval-config.nix) {
       users.users.builder.openssh.authorizedKeys.keys = config'.authorizedKeys;
       users.users.root.openssh.authorizedKeys.keys = config'.rootAuthorizedKeys;
 
-      nixpkgs.crossSystem = lib.mkIf (config' ? system) { inherit (config') system; };
+      nixpkgs.crossSystem = lib.mkIf (config' ? system && config'.system != system) { inherit (config') system; };
       nix.maxJobs = lib.mkIf (config' ? maxJobs) config'.maxJobs;
       nix.buildCores = lib.mkIf (config' ? maxJobs) config'.cores;
     })
