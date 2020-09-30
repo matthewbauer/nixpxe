@@ -52,7 +52,7 @@
   boot.initrd.availableKernelModules = [ "squashfs" "overlay" ];
   boot.initrd.kernelModules = [ "loop" "overlay" ];
 
-  hardware.enableRedistributableFirmware = true;
+  hardware.enableRedistributableFirmware = false;
   networking.wireless.enable = false;
 
   services.openssh.enable = true;
