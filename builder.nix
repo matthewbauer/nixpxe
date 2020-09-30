@@ -110,4 +110,10 @@
     max-free = 4294967296 # 2^32
   '';
 
+  boot.postBootCommands = ''
+    # After booting, register the contents of the Nix store
+    # in the Nix database in the tmpfs.
+    ${config.nix.package}/bin/nix-store --load-db < /nix/store/nix-path-registration
+  '';
+
 }
