@@ -52,8 +52,7 @@
   boot.initrd.availableKernelModules = [ "squashfs" "overlay" ];
   boot.initrd.kernelModules = [ "loop" "overlay" ];
 
-  hardware.enableRedistributableFirmware = false;
-  networking.wireless.enable = false;
+  boot.kernelParams = [ "panic=1" "boot.panic_on_fail" ];
 
   services.openssh.enable = true;
   users.users.builder = {
