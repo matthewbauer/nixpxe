@@ -49,6 +49,8 @@
       ];
     };
 
+  nix.package = pkgs.nixUnstable;
+
   boot.initrd.availableKernelModules = [ "squashfs" "overlay" ];
   boot.initrd.kernelModules = [ "loop" "overlay" ];
 
