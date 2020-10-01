@@ -62,8 +62,6 @@
   users.groups.nix-trusted-user = {};
   nix.trustedUsers = [ "root" "builder" "@nix-trusted-user" ];
 
-  services.localtime.enable = true;
-
   systemd.enableEmergencyMode = false;
   systemd.services."serial-getty@ttyS0".enable = false;
   systemd.services."serial-getty@hvc0".enable = false;
