@@ -13,7 +13,7 @@ in import (pkgs.path + /nixos/lib/eval-config.nix) {
       networking.hostName =
         if macAddress == "*" then hostName
         else config'.hostName;
-      i18n.defaultLocale = config'.lang;
+      i18n.defaultLocale = "${config'.lang}.UTF-8";
       i18n.supportedLocales = [ "${config'.lang}.UTF-8/UTF-8" ];
       users.users.builder.openssh.authorizedKeys.keys = config'.authorizedKeys;
       users.users.root.openssh.authorizedKeys.keys = config'.rootAuthorizedKeys;
