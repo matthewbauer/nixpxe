@@ -1,6 +1,7 @@
 {
     "00:e0:4c:68:01:df": {
         "lang": "en_US",
+        "timeZone": "America/New_York",
         "hostName": "dellbook",
         "system": "x86_64-linux",
         "cores": 6,
