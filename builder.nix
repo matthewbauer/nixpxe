@@ -125,18 +125,18 @@
     mkdir -m 0755 -p /etc/ssh
     if ! [ -f /etc/ssh/ssh_host_rsa_key ]; then
       if [ -e /dev/tpm0 ] && ${pkgs.tpm2-tools}/bin/tpm2_nvread $tpm_ssh_host_key_index -C o -o /etc/ssh/ssh_host_rsa_key.der 2>/tmp/stderr; then
+        chmod 600 /etc/ssh/ssh_host_rsa_key.der
         ${pkgs.openssl}/bin/openssl rsa -inform der -in /etc/ssh/ssh_host_rsa_key.der -outform pem -out /etc/ssh/ssh_host_rsa_key
         chmod 600 /etc/ssh/ssh_host_rsa_key
-        rm -f /etc/ssh/ssh_host_rsa_key.der
       else
         ${pkgs.openssh}/bin/ssh-keygen -b 2048 -m PEM -t rsa -f /etc/ssh/ssh_host_rsa_key -N ""
 
         # put the key in nvram
         if [ -e /dev/tpm0 ]; then
           ${pkgs.openssl}/bin/openssl rsa -in /etc/ssh/ssh_host_rsa_key -outform der -out /etc/ssh/ssh_host_rsa_key.der
+          chmod 600 /etc/ssh/ssh_host_rsa_key.der
           ${pkgs.tpm2-tools}/bin/tpm2_nvdefine $tpm_ssh_host_key_index -s 1191 -a "ownerread|ownerwrite" || true
           ${pkgs.tpm2-tools}/bin/tpm2_nvwrite $tpm_ssh_host_key_index -C o -i /etc/ssh/ssh_host_rsa_key.der || true
-          rm -f /etc/ssh/ssh_host_rsa_key.der
         fi
       fi
     fi
