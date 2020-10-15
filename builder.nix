@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
 
@@ -51,7 +51,8 @@
 
   nix.package = pkgs.nixUnstable;
 
-  boot.initrd.availableKernelModules = [ "squashfs" "overlay" ];
+  boot.initrd.availableKernelModules = [ "squashfs" "overlay" "rng_core" "tpm" "tpm_tis_core" "tpm_tis" ];
+
   boot.initrd.kernelModules = [ "loop" "overlay" ];
 
   boot.kernelParams = [ "panic=1" "boot.panic_on_fail" ];
@@ -110,10 +111,39 @@
     max-free = 4294967296 # 2^32
   '';
 
+  # We generate it ourselves
+  services.openssh.hostKeys = lib.mkForce [];
+
   boot.postBootCommands = ''
     # After booting, register the contents of the Nix store
     # in the Nix database in the tmpfs.
     ${config.nix.package}/bin/nix-store --load-db < /nix/store/nix-path-registration
+
+    # Load ssh key from TPM NVRAM if it exists. Otherwise generate it
+    # from scratch.
+    tpm_ssh_host_key_index=133279
+    mkdir -m 0755 -p /etc/ssh
+    if ! [ -f /etc/ssh/ssh_host_rsa_key ]; then
+      if [ -e /dev/tpm0 ] && ${pkgs.tpm2-tools}/bin/tpm2_nvread $tpm_ssh_host_key_index -C o -o /etc/ssh/ssh_host_rsa_key.der 2>/tmp/stderr; then
+        ${pkgs.openssl}/bin/openssl rsa -inform der -in /etc/ssh/ssh_host_rsa_key.der -outform pem -out /etc/ssh/ssh_host_rsa_key
+        chmod 600 /etc/ssh/ssh_host_rsa_key
+        rm -f /etc/ssh/ssh_host_rsa_key.der
+      else
+        ${pkgs.openssh}/bin/ssh-keygen -b 2048 -m PEM -t rsa -f /etc/ssh/ssh_host_rsa_key -N ""
+
+        # put the key in nvram
+        if [ -e /dev/tpm0 ]; then
+          ${pkgs.openssl}/bin/openssl rsa -in /etc/ssh/ssh_host_rsa_key -outform der -out /etc/ssh/ssh_host_rsa_key.der
+          ${pkgs.tpm2-tools}/bin/tpm2_nvdefine $tpm_ssh_host_key_index -s 1191 -a "ownerread|ownerwrite" || true
+          ${pkgs.tpm2-tools}/bin/tpm2_nvwrite $tpm_ssh_host_key_index -C o -i /etc/ssh/ssh_host_rsa_key.der || true
+          rm -f /etc/ssh/ssh_host_rsa_key.der
+        fi
+      fi
+    fi
   '';
+
+  security.tpm2.enable = true;
+  security.tpm2.abrmd.enable = true;
+  security.tpm2.pkcs11.enable = true;
 
 }

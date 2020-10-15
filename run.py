@@ -49,7 +49,7 @@ class PixieListener(http.server.BaseHTTPRequestHandler):
                 system = process.stdout.readline().decode("utf-8").rstrip()
                 if system != '':
                     break
-                elif process.returncode > 0:
+                elif not process.returncode or process.returncode > 0:
                     self.send_response(500)
                     self.end_headers()
                     return
@@ -79,7 +79,7 @@ class PixieListener(http.server.BaseHTTPRequestHandler):
                 pxe_kernel = process.stdout.readline().decode("utf-8").rstrip()
                 if pxe_kernel != '':
                     break
-                elif process.returncode > 0:
+                elif not process.returncode or process.returncode > 0:
                     self.send_response(500)
                     self.end_headers()
                     return
@@ -104,7 +104,7 @@ class PixieListener(http.server.BaseHTTPRequestHandler):
                 pxe_ramdisk = process.stdout.readline().decode("utf-8").rstrip()
                 if pxe_ramdisk != '':
                     break
-                elif process.returncode > 0:
+                elif not process.returncode or process.returncode > 0:
                     self.send_response(500)
                     self.end_headers()
                     return

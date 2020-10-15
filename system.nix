@@ -16,9 +16,7 @@ in import (pkgs.path + /nixos/lib/eval-config.nix) {
       time.timeZone = lib.mkIf (config' ? timeZone) config'.timeZone;
       i18n.defaultLocale = lib.mkIf (config' ? lang) "${config'.lang}.UTF-8";
       i18n.supportedLocales = lib.mkIf (config' ? lang) [ "${config'.lang}.UTF-8/UTF-8" ];
-      users.users.builder.openssh.authorizedKeys.keys = lib.mkIf (config' ? authorizedKeys) config'.authorizedKeys;
-      users.users.root.openssh.authorizedKeys.keys = lib.mkIf (config' ? rootAuthorizedKeys) config'.rootAuthorizedKeys;
-
+      users.users = lib.mkIf (config' ? users) config'.users;
       nixpkgs.crossSystem = lib.mkIf (config' ? system && config'.system != system) { inherit (config') system; };
       nix.maxJobs = lib.mkIf (config' ? maxJobs) config'.maxJobs;
       nix.buildCores = lib.mkIf (config' ? maxJobs) config'.cores;
