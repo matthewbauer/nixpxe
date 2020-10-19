@@ -2,7 +2,8 @@
     "00:e0:4c:68:01:df": {
         "lang": "en_US",
         "timeZone": "America/New_York",
-        "hostName": "dellbook.local",
+        "hostName": "dellbook",
+        "domain": "local",
         "system": "x86_64-linux",
         "cores": 6,
         "maxJobs": 12,
