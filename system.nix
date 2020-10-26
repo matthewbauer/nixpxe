@@ -21,6 +21,9 @@ in import (pkgs.path + /nixos/lib/eval-config.nix) {
       nixpkgs.crossSystem = lib.mkIf (config' ? system && config'.system != system) { inherit (config') system; };
       nix.maxJobs = lib.mkIf (config' ? maxJobs) config'.maxJobs;
       nix.buildCores = lib.mkIf (config' ? maxJobs) config'.cores;
+      networking.wireless.networks = builtins.mapAttrs (_: value: { pskRaw = value; }) (config'.networks or {});
+      networking.wireless.enable = (config'.networks or {}) != {};
+      hardware.enableRedistributableFirmware = (config'.networks or {}) != {};
     })
   ];
 }
