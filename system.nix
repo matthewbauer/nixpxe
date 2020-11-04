@@ -24,6 +24,7 @@ in import (pkgs.path + /nixos/lib/eval-config.nix) {
       networking.wireless.networks = builtins.mapAttrs (_: value: { pskRaw = value; }) (config'.networks or {});
       networking.wireless.enable = (config'.networks or {}) != {};
       hardware.enableRedistributableFirmware = (config'.networks or {}) != {};
+      networking.dhcpcd = lib.mkIf (config' ? dhcpcd) config'.dhcpcd;
     })
   ];
 }

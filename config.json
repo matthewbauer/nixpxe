@@ -7,6 +7,9 @@
         "system": "x86_64-linux",
         "cores": 6,
         "maxJobs": 12,
+        "dhcpcd": {
+            "extraConfig": "interface ens20u1\nnogateway\n"
+        },
         "users": {
             "builder": {
                 "openssh": {
