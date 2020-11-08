@@ -3,7 +3,6 @@
         "lang": "en_US",
         "timeZone": "America/New_York",
         "hostName": "dellbook",
-        "domain": "local",
         "system": "x86_64-linux",
         "cores": 6,
         "maxJobs": 12,
