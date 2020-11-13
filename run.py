@@ -67,7 +67,7 @@ class PixieListener(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({
                 "kernel": "/kernel/%s" % mac_address,
-                "initrd": ["/initrd/%s" % mac_address],
+                "initrd": ["/initrd/%s" % mac_address, "/nix-store/%s" % mac_address, "/manifest/%s" % mac_address],
                 "cmdline": ("init=%s/init %s" % (system, kernel_params))
             }).encode())
         elif parts[1] == 'kernel':
@@ -97,7 +97,57 @@ class PixieListener(http.server.BaseHTTPRequestHandler):
                 self.wfile.write(f.read())
         elif parts[1] == 'initrd':
             mac_address = parts[2]
-            process = build_system('config.system.build.netbootRamdisk', mac_address)
+            process = build_system('config.system.build.initialRamdisk', mac_address)
+            pxe_ramdisk = None
+            timeout = 0
+            while True:
+                pxe_ramdisk = process.stdout.readline().decode("utf-8").rstrip()
+                if pxe_ramdisk != '':
+                    break
+                elif not process.returncode or process.returncode > 0:
+                    self.send_response(500)
+                    self.end_headers()
+                    return
+                elif timeout > 500:
+                    self.send_response(500)
+                    self.end_headers()
+                    return
+                timeout += 1
+                time.sleep(1)
+            self.send_response(200)
+            filename = '%s/initrd' % pxe_ramdisk
+            self.send_header('Content-Length', "%s" % os.path.getsize(filename))
+            self.end_headers()
+            with open(filename, 'rb') as f:
+                self.wfile.write(f.read())
+        elif parts[1] == 'manifest':
+            mac_address = parts[2]
+            process = build_system('config.system.build.manifestRamdisk', mac_address)
+            pxe_ramdisk = None
+            timeout = 0
+            while True:
+                pxe_ramdisk = process.stdout.readline().decode("utf-8").rstrip()
+                if pxe_ramdisk != '':
+                    break
+                elif not process.returncode or process.returncode > 0:
+                    self.send_response(500)
+                    self.end_headers()
+                    return
+                elif timeout > 500:
+                    self.send_response(500)
+                    self.end_headers()
+                    return
+                timeout += 1
+                time.sleep(1)
+            self.send_response(200)
+            filename = '%s/initrd' % pxe_ramdisk
+            self.send_header('Content-Length', "%s" % os.path.getsize(filename))
+            self.end_headers()
+            with open(filename, 'rb') as f:
+                self.wfile.write(f.read())
+        elif parts[1] == 'nix-store':
+            mac_address = parts[2]
+            process = build_system('config.system.build.nixStoreRamdisk', mac_address)
             pxe_ramdisk = None
             timeout = 0
             while True:

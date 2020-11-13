@@ -1,22 +1,13 @@
 { config, pkgs, lib, ... }:
 
-{
+let
+  netbootpkgs = pkgs.callPackage "${builtins.fetchTarball "https://github.com/grahamc/netboot.nix/archive/master.tar.gz"}/pkgs" {};
+in {
 
   # Create the squashfs image that contains the Nix store.
-  system.build.squashfsStore = pkgs.callPackage (pkgs.path + /nixos/lib/make-squashfs.nix) {
-    storeContents = [ config.system.build.toplevel ];
-  };
-
-  # Create the initrd
-  system.build.netbootRamdisk = pkgs.makeInitrd {
-    inherit (config.boot.initrd) compressor;
-    prepend = [ "${config.system.build.initialRamdisk}/initrd" ];
-
-    contents =
-      [ { object = config.system.build.squashfsStore;
-          symlink = "/nix-store.squashfs";
-        }
-      ];
+  system.build.squashfsStore = netbootpkgs.makeSquashfsManifest {
+    name = "iso-manifest";
+    storeContents = config.system.build.toplevel;
   };
 
   boot.loader.grub.enable = false;
@@ -26,27 +17,10 @@
       options = [ "mode=0755" ];
     };
 
-  fileSystems."/nix/.ro-store" =
-    { fsType = "squashfs";
-      device = "../nix-store.squashfs";
-      options = [ "loop" ];
-      neededForBoot = true;
-    };
-
-  fileSystems."/nix/.rw-store" =
+  fileSystems."/nix" =
     { fsType = "tmpfs";
       options = [ "mode=0755" ];
       neededForBoot = true;
-    };
-
-  fileSystems."/nix/store" =
-    { fsType = "overlay";
-      device = "overlay";
-      options = [
-        "lowerdir=/nix/.ro-store"
-        "upperdir=/nix/.rw-store/store"
-        "workdir=/nix/.rw-store/work"
-      ];
     };
 
   nix.package = pkgs.nixUnstable;
@@ -140,6 +114,57 @@
         fi
       fi
     fi
+  '';
+
+  boot.initrd.compressor = "gzip -9n";
+
+  system.build.nixStoreRamdisk = netbootpkgs.makeCpioRecursive {
+    name = "better-initrd";
+    inherit (config.boot.initrd) compressor;
+    root = config.system.build.squashfsStore;
+  };
+
+  system.build.manifestRamdisk = pkgs.makeInitrd {
+    inherit (config.boot.initrd) compressor;
+    contents =
+      [
+        {
+          object = config.system.build.squashfsStore.manifest;
+          symlink = "/nix-store-squashes";
+        }
+      ];
+  };
+
+  boot.initrd.postMountCommands = ''
+    echo "Mounting initial store"
+    (
+    set -eux
+    mkdir -p /mnt-root/nix/.squash
+    mkdir -p /mnt-root/nix/store
+    gunzip < /nix-store-squashes/registration.gz > /mnt-root/nix/registration
+    # the manifest splits the /nix/store/.... path with a " " to
+    # prevent Nix from determining it depends on things.
+    for f in $(cat /nix-store-squashes/squashes | sed 's/ //'); do
+      prefix=$(basename "$(dirname "$f")")
+      suffix=$(basename "$f")
+      dest="$prefix$suffix"
+      mkdir "/mnt-root/nix/.squash/$dest"
+      mount -t squashfs -o loop "$f" "/mnt-root/nix/.squash/$dest"
+      (
+        # Ideally, these would not be copied and the mounts would be
+        # used directly. However, we can't: systemd tries to unmount
+        # them all at shutdown and gets stuck. The trade-off here is
+        # an increased RAM requirement and a slightly slower
+        # start-up. However, all that is much faster than needing
+        # to recreate the entire squashfs every time.
+        cd /mnt-root/nix/store/
+        cp -ar "../.squash/$dest/$dest" "./$dest"
+      )
+      umount "/mnt-root/nix/.squash/$dest"
+      rm "$f"
+      set +x
+    done
+    )
   '';
 
 }
