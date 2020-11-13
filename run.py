@@ -39,6 +39,33 @@ def build_system(attr, mac_address):
     return process
 
 class PixieListener(http.server.BaseHTTPRequestHandler):
+    def do_nix_GET(self, attr, path):
+        parts = self.path.split('/')
+        mac_address = parts[2]
+        process = build_system(attr, mac_address)
+        drv = None
+        timeout = 0
+        while True:
+            drv = process.stdout.readline().decode("utf-8").rstrip()
+            if drv != '':
+                break
+            elif not process.returncode or process.returncode > 0:
+                self.send_response(500)
+                self.end_headers()
+                return
+            elif timeout > 500:
+                self.send_response(500)
+                self.end_headers()
+                return
+            timeout += 1
+            time.sleep(1)
+        self.send_response(200)
+        filename = drv + path
+        self.send_header('Content-Length', "%s" % os.path.getsize(filename))
+        self.end_headers()
+        with open(filename, 'rb') as f:
+            self.wfile.write(f.read())
+
     def do_GET(self):
         parts = self.path.split('/')
         if parts[1] == 'v1' and parts[2] == 'boot':
@@ -72,105 +99,13 @@ class PixieListener(http.server.BaseHTTPRequestHandler):
                 "cmdline": ("init=%s/init %s" % (system, kernel_params))
             }).encode())
         elif parts[1] == 'kernel':
-            mac_address = parts[2]
-            process = build_system('config.system.build.kernel', mac_address)
-            pxe_kernel = None
-            timeout = 0
-            while True:
-                pxe_kernel = process.stdout.readline().decode("utf-8").rstrip()
-                if pxe_kernel != '':
-                    break
-                elif not process.returncode or process.returncode > 0:
-                    self.send_response(500)
-                    self.end_headers()
-                    return
-                elif timeout > 500:
-                    self.send_response(500)
-                    self.end_headers()
-                    return
-                timeout += 1
-                time.sleep(1)
-            self.send_response(200)
-            filename = '%s/bzImage' % pxe_kernel
-            self.send_header('Content-Length', "%s" % os.path.getsize(filename))
-            self.end_headers()
-            with open(filename, 'rb') as f:
-                self.wfile.write(f.read())
+            self.do_nix_GET('config.system.build.kernel', '/bzImage')
         elif parts[1] == 'initrd':
-            mac_address = parts[2]
-            process = build_system('config.system.build.initialRamdisk', mac_address)
-            pxe_ramdisk = None
-            timeout = 0
-            while True:
-                pxe_ramdisk = process.stdout.readline().decode("utf-8").rstrip()
-                if pxe_ramdisk != '':
-                    break
-                elif not process.returncode or process.returncode > 0:
-                    self.send_response(500)
-                    self.end_headers()
-                    return
-                elif timeout > 500:
-                    self.send_response(500)
-                    self.end_headers()
-                    return
-                timeout += 1
-                time.sleep(1)
-            self.send_response(200)
-            filename = '%s/initrd' % pxe_ramdisk
-            self.send_header('Content-Length', "%s" % os.path.getsize(filename))
-            self.end_headers()
-            with open(filename, 'rb') as f:
-                self.wfile.write(f.read())
+            self.do_nix_GET('config.system.build.initialRamdisk', '/initrd')
         elif parts[1] == 'manifest':
-            mac_address = parts[2]
-            process = build_system('config.system.build.manifestRamdisk', mac_address)
-            pxe_ramdisk = None
-            timeout = 0
-            while True:
-                pxe_ramdisk = process.stdout.readline().decode("utf-8").rstrip()
-                if pxe_ramdisk != '':
-                    break
-                elif not process.returncode or process.returncode > 0:
-                    self.send_response(500)
-                    self.end_headers()
-                    return
-                elif timeout > 500:
-                    self.send_response(500)
-                    self.end_headers()
-                    return
-                timeout += 1
-                time.sleep(1)
-            self.send_response(200)
-            filename = '%s/initrd' % pxe_ramdisk
-            self.send_header('Content-Length', "%s" % os.path.getsize(filename))
-            self.end_headers()
-            with open(filename, 'rb') as f:
-                self.wfile.write(f.read())
+            self.do_nix_GET('config.system.build.manifestRamdisk', '/initrd')
         elif parts[1] == 'nix-store':
-            mac_address = parts[2]
-            process = build_system('config.system.build.nixStoreRamdisk', mac_address)
-            pxe_ramdisk = None
-            timeout = 0
-            while True:
-                pxe_ramdisk = process.stdout.readline().decode("utf-8").rstrip()
-                if pxe_ramdisk != '':
-                    break
-                elif not process.returncode or process.returncode > 0:
-                    self.send_response(500)
-                    self.end_headers()
-                    return
-                elif timeout > 500:
-                    self.send_response(500)
-                    self.end_headers()
-                    return
-                timeout += 1
-                time.sleep(1)
-            self.send_response(200)
-            filename = '%s/initrd' % pxe_ramdisk
-            self.send_header('Content-Length', "%s" % os.path.getsize(filename))
-            self.end_headers()
-            with open(filename, 'rb') as f:
-                self.wfile.write(f.read())
+            self.do_nix_GET('config.system.build.nixStoreRamdisk', '/initrd')
         else:
             self.send_response(404)
             self.end_headers()
