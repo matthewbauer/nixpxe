@@ -27,6 +27,7 @@ numHosts = 1
 def build_system(attr, mac_address):
     global numHosts
     process = subprocess.Popen(['nix-build', '--no-gc-warning', '--no-out-link', 'system.nix',
+                                '--option', 'experimental-features', 'recursive-nix',
                                 '-A', attr,
                                 "--argstr", "macAddress", mac_address,
                                 "--argstr", "hostName", "nixos%s" % numHosts,
