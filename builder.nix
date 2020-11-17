@@ -91,7 +91,12 @@ in {
   boot.postBootCommands = ''
     # After booting, register the contents of the Nix store
     # in the Nix database in the tmpfs.
-    ${config.nix.package}/bin/nix-store --load-db < /nix/store/nix-path-registration
+    ${config.nix.package}/bin/nix-store --load-db < /nix/registration
+
+    # nixos-rebuild also requires a "system" profile and an
+    # /etc/NIXOS tag.
+    touch /etc/NIXOS
+    ${config.nix.package}/bin/nix-env -p /nix/var/nix/profiles/system --set /run/current-system
 
     # Load ssh key from TPM NVRAM if it exists. Otherwise generate it
     # from scratch.
@@ -137,8 +142,7 @@ in {
 
   boot.initrd.postMountCommands = ''
     echo "Mounting initial store"
-    (
-    set -eux
+
     mkdir -p /mnt-root/nix/.squash
     mkdir -p /mnt-root/nix/store
     gunzip < /nix-store-squashes/registration.gz > /mnt-root/nix/registration
@@ -162,9 +166,7 @@ in {
       )
       umount "/mnt-root/nix/.squash/$dest"
       rm "$f"
-      set +x
     done
-    )
   '';
 
 }
