@@ -109,7 +109,7 @@ class PixieListener(http.server.BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
 
-process = subprocess.Popen(["pixiecore", "api", "--api-request-timeout", "15m", "http://localhost:%s" % port])
+process = subprocess.Popen(["sudo", "pixiecore", "api", "--api-request-timeout", "15m", "http://localhost:%s" % port])
 
 httpd = http.server.HTTPServer(('', port), PixieListener)
 while not process.poll():
