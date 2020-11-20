@@ -27,7 +27,7 @@ def build_system(attr, mac_address):
     tmp = tempfile.mkdtemp() + '/result'
     try:
         # FIXME: should validate mac address
-        process = subprocess.Popen(['nix', '--experimental-features', 'nix-command flakes recursive', 'build', "-o", tmp, "%s#nixosConfigurations.%s.%s" % (args.flake, mac_address, attr)])
+        process = subprocess.Popen(['nix', '--experimental-features', 'nix-command flakes recursive-nix', 'build', "-o", tmp, "%s#nixosConfigurations.%s.%s" % (args.flake, mac_address, attr)])
         process.wait()
         path = os.readlink(tmp)
     finally:
