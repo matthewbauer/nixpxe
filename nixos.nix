@@ -1,7 +1,7 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, netbootPkgsSrc, ... }:
 
 let
-  netbootpkgs = pkgs.callPackage "${builtins.fetchTarball "https://github.com/grahamc/netboot.nix/archive/master.tar.gz"}/pkgs" {};
+  netbootpkgs = pkgs.callPackage "${netbootpkgsSrc}" {};
 in {
 
   # Create the squashfs image that contains the Nix store.
