@@ -34,7 +34,7 @@
         nixpxe.nixosModule
         ({ lib, ... }: {
           networking.hostName = "dellbook";
-          nixpkgs.crossSystem = lib.mkForce { system = "x86_64-linux"; };
+          # nixpkgs.crossSystem = lib.mkForce { system = "x86_64-linux"; };
           time.timeZone = "America/New_York";
           i18n.defaultLocale = "en_us.UTF-8";
           i18n.supportedLocales = [ "en_US.UTF-8/UTF-8" ];
