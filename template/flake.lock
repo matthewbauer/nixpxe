@@ -54,8 +54,8 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1605910463,
-        "narHash": "sha256-1EXiFe2n1w0f/GNrf+wL+Lrp+zAdayNv/4FJ0J+PmKE=",
+        "lastModified": 1605910796,
+        "narHash": "sha256-I5yQxsQbHJD0oWGvEOTJ1K+rhYmKH5kSVghgq3hkuAE=",
         "type": "git",
         "url": "file:///home/demo/nixpxe"
       },
