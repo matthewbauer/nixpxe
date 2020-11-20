@@ -2,7 +2,7 @@
 { config, pkgs, lib, ... }:
 
 let
-  netbootpkgs = pkgs.callPackage "${netbootpkgsSrc}" {};
+  netbootpkgs = pkgs.callPackage "${netbootpkgsSrc}/pkgs" {};
 in {
 
   # Create the squashfs image that contains the Nix store.

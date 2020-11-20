@@ -1,5 +1,5 @@
 #!/usr/bin/env nix-shell
-#!nix-shell -i python3 -p nix pixiecore python3
+#!nix-shell -i python3 -p nixUnstable pixiecore python3
 
 import argparse
 import os
@@ -7,57 +7,38 @@ import time
 import subprocess
 import http.server
 import json
+import sys
+import tempfile
 
 port = 4242
-configFile = "./config.json"
 
 parser = argparse.ArgumentParser(description='Run NixOS PXE Daemon')
-parser.add_argument('config', type=str, help='config file',
-                    default='./config.json', nargs='?')
+parser.add_argument('flake', type=str, help='flake file',
+                    default='./template', nargs='?')
 
 args = parser.parse_args()
 
-if not os.path.exists(args.config):
-    print("Config %s does not exist" % args.config)
+if not os.path.exists(args.flake):
+    print("Flake %s does not exist" % args.flake)
     sys.exit(1)
 
-knownAddresses = {}
-numHosts = 1
-
 def build_system(attr, mac_address):
-    global numHosts
-    process = subprocess.Popen(['nix-build', '--no-gc-warning', '--no-out-link', 'system.nix',
-                                '-A', attr,
-                                "--argstr", "macAddress", mac_address,
-                                "--argstr", "hostName", "nixos%s" % numHosts,
-                                "--arg", "config", ("builtins.fromJSON (builtins.readFile %s)" % args.config)]
-                                , stdout=subprocess.PIPE)
-    if mac_address not in knownAddresses:
-        knownAddresses[mac_address] = True
-        numHosts += 1
-    return process
+    path = None
+    tmp = tempfile.mkdtemp() + '/result'
+    try:
+        # FIXME: should validate mac address
+        process = subprocess.Popen(['nix', '--experimental-features', 'nix-command flakes recursive', 'build', "-o", tmp, "%s#nixosConfigurations.%s.%s" % (args.flake, mac_address, attr)])
+        process.wait()
+        path = os.readlink(tmp)
+    finally:
+        os.unlink(tmp)
+    return path
 
 class PixieListener(http.server.BaseHTTPRequestHandler):
     def do_nix_GET(self, attr, path):
         parts = self.path.split('/')
         mac_address = parts[2]
-        process = build_system(attr, mac_address)
-        drv = None
-        timeout = 0
-        while True:
-            drv = process.stdout.readline().decode("utf-8").rstrip()
-            if drv != '':
-                break
-            elif not process.returncode or process.returncode > 0:
-                self.send_response(500)
-                self.end_headers()
-                return
-            elif timeout > 500:
-                self.send_response(500)
-                self.end_headers()
-                return
-            timeout += 1
-            time.sleep(1)
+        drv = build_system(attr, mac_address)
         self.send_response(200)
         filename = drv + path
         self.send_header('Content-Length', "%s" % os.path.getsize(filename))
@@ -69,23 +50,7 @@ class PixieListener(http.server.BaseHTTPRequestHandler):
         parts = self.path.split('/')
         if parts[1] == 'v1' and parts[2] == 'boot':
             mac_address = parts[3]
-            process = build_system('config.system.build.toplevel', mac_address)
-            system = None
-            timeout = 0
-            while True:
-                system = process.stdout.readline().decode("utf-8").rstrip()
-                if system != '':
-                    break
-                elif not process.returncode or process.returncode > 0:
-                    self.send_response(500)
-                    self.end_headers()
-                    return
-                elif timeout > 500:
-                    self.send_response(500)
-                    self.end_headers()
-                    return
-                timeout += 1
-                time.sleep(1)
+            system = build_system('config.system.build.toplevel', mac_address)
             kernel_params = ''
             with open('%s/kernel-params' % system, 'r') as f:
                 kernel_params = f.read()
@@ -112,5 +77,6 @@ class PixieListener(http.server.BaseHTTPRequestHandler):
 process = subprocess.Popen(["sudo", "pixiecore", "api", "--api-request-timeout", "15m", "http://localhost:%s" % port])
 
 httpd = http.server.HTTPServer(('', port), PixieListener)
+print("Serving on %s" % port)
 while not process.poll():
     httpd.handle_request()
