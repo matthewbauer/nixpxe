@@ -54,10 +54,12 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1605910796,
-        "narHash": "sha256-I5yQxsQbHJD0oWGvEOTJ1K+rhYmKH5kSVghgq3hkuAE=",
-        "type": "git",
-        "url": "file:///home/demo/nixpxe"
+        "lastModified": 1605912450,
+        "narHash": "sha256-krzSAdnXW4KY+k9CH1cs/d1UTnLY5b9kLwiyYKVo3MI=",
+        "owner": "matthewbauer",
+        "repo": "nixpxe",
+        "rev": "4ddd1d2c6e6a38d5ea2f1a247386974ecd095873",
+        "type": "github"
       },
       "original": {
         "owner": "matthewbauer",
