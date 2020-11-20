@@ -1,4 +1,5 @@
-{ config, pkgs, lib, netbootPkgsSrc, ... }:
+{ netbootpkgsSrc }:
+{ config, pkgs, lib, ... }:
 
 let
   netbootpkgs = pkgs.callPackage "${netbootpkgsSrc}" {};
