@@ -6,6 +6,7 @@
 
   outputs = { self, nixpkgs, netbootpkgs }: {
     nixosModule = import ./nixos.nix { netbootpkgsSrc = netbootpkgs; };
+    defaultTemplate.path = ./template;
   };
 
 }
