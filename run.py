@@ -25,13 +25,13 @@ if not os.path.exists(args.flake):
 def build_system(attr, mac_address):
     path = None
     tmp = tempfile.mkdtemp() + '/result'
-    try:
-        # FIXME: should validate mac address
-        process = subprocess.Popen(['nix', '--experimental-features', 'nix-command flakes recursive-nix', 'build', "-o", tmp, "%s#nixosConfigurations.%s.%s" % (args.flake, mac_address, attr)])
-        process.wait()
-        path = os.readlink(tmp)
-    finally:
-        os.unlink(tmp)
+    # FIXME: should validate mac address
+    process = subprocess.Popen(['nix', '--experimental-features', 'nix-command flakes recursive-nix', 'build', "-o", tmp, "%s#nixosConfigurations.%s.%s" % (args.flake, mac_address, attr)])
+    status = process.wait(600)
+    if status != 0:
+        return None
+    path = os.readlink(tmp)
+    os.unlink(tmp)
     return path
 
 class PixieListener(http.server.BaseHTTPRequestHandler):
@@ -39,6 +39,10 @@ class PixieListener(http.server.BaseHTTPRequestHandler):
         parts = self.path.split('/')
         mac_address = parts[2]
         drv = build_system(attr, mac_address)
+        if not drv:
+            self.send_response(500)
+            self.end_headers()
+            return
         self.send_response(200)
         filename = drv + path
         self.send_header('Content-Length', "%s" % os.path.getsize(filename))
@@ -51,6 +55,10 @@ class PixieListener(http.server.BaseHTTPRequestHandler):
         if parts[1] == 'v1' and parts[2] == 'boot':
             mac_address = parts[3]
             system = build_system('config.system.build.toplevel', mac_address)
+            if not system:
+                self.send_response(500)
+                self.end_headers()
+                return
             kernel_params = ''
             with open('%s/kernel-params' % system, 'r') as f:
                 kernel_params = f.read()
