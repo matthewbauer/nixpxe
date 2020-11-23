@@ -55,9 +55,9 @@
           };
           nix.maxJobs = 12;
           nix.buildCores = 6;
-          networking.wireless.networks = lib.mkIf (builtins.pathExists ./networks.json) builtins.fromJSON (builtins.readFile ./networks.json);
-          networking.wireless.enable = builtins.pathExists ./networks.json;
-          hardware.enableRedistributableFirmware = builtins.pathExists ./networks.json;
+          networking.wireless.networks = {};
+          networking.wireless.enable = true;
+          hardware.enableRedistributableFirmware = true;
           networking.dhcpcd.extraConfig = ''
             interface ens20u1
             nogateway
