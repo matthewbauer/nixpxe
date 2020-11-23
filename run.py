@@ -25,6 +25,7 @@ if not os.path.exists(args.flake):
 def build_system(attr, mac_address):
     path = None
     tmp = tempfile.mkdtemp() + '/result'
+    # TODO: try default if mac address isn't in nixosConfigurations
     # FIXME: should validate mac address
     process = subprocess.Popen(['nix', '--experimental-features', 'nix-command flakes recursive-nix', 'build', "-o", tmp, "%s#nixosConfigurations.%s.%s" % (args.flake, mac_address, attr)])
     status = process.wait(600)
