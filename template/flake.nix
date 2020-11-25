@@ -32,7 +32,7 @@
       system = "x86_64-linux";
       modules = [
         nixpxe.nixosModule
-        ({ lib, ... }: {
+        ({ lib, pkgs, ... }: {
           networking.hostName = "dellbook";
           # nixpkgs.crossSystem = lib.mkForce { system = "x86_64-linux"; };
           time.timeZone = "America/New_York";
@@ -57,7 +57,11 @@
           nix.buildCores = 6;
           networking.wireless.networks = {};
           networking.wireless.enable = true;
-          hardware.enableRedistributableFirmware = true;
+          hardware.firmware = [(pkgs.buildEnv {
+            name = "ath10k-qca6174-firmware";
+            paths = [ pkgs.firmwareLinuxNonfree ];
+            pathsToLink = [ "/lib/firmware/ath10k/QCA6174" ];
+          })];
           networking.dhcpcd.extraConfig = ''
             interface ens20u1
             nogateway
